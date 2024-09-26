@@ -21,5 +21,23 @@ TYPE_DICT = {
     'is_largest_firm': 'bool',
     'is_NEM2': 'bool',
     'has_battery': 'bool',
+    'service_city': 'str',
+    'installer_name': 'str',
+    'total_cost': 'float64',
     # 'year': 'category'
+}
+
+TYPE_DICT_AGG = {
+    "service_city": 'str',
+    "installer_name": 'str',
+    "year_month": 'datetime64[ns]',
+    "size_dc": 'float64',
+    "battery_storage": 'float64',
+    "total_cost": 'float64',
+    "is_largest_firm": 'bool',
+    "days_to_completion": 'int64',
+    "adjusted_price": 'float64',
+    "app_received": 'int64',
+    "app_complete": 'int64',
+    "queue": 'int64',
 }

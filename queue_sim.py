@@ -1,6 +1,7 @@
 import numpy as np
 import collections
 
+
 T = 2
 d_T = [
     lambda p: 50 - p,

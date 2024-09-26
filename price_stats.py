@@ -102,8 +102,8 @@ df_ts = df_mean.join(df_count, on=['service_city', 'installer_name', 'year_month
 
 df_ts = pd.concat([df_ts, df_count_comp], axis=1)
 
-# df_ts = df_ts.reset_index()
-# df_ts = df_ts.rename(columns={'level_2': 'year_month'})
+df_ts = df_ts.reset_index()
+df_ts = df_ts.rename(columns={'level_2': 'year_month'})
 
 
 # fill in empty rows
@@ -116,84 +116,12 @@ df_ts['adjusted_price'] = df_ts['adjusted_price'].fillna(0)
 df_ts['is_largest_firm'] = df_ts['is_largest_firm'].fillna(0)
 df_ts['app_received'] = df_ts['app_received'].fillna(0)
 df_ts['app_complete'] = df_ts['app_complete'].fillna(0)
-
-
-
-
-
-# construct queue
+# set queue to zero for all. build queue later.
 df_ts.loc[:,'queue'] = 0
 
 
-
-dates_raw = [
-    # '2021-01',
-    '2021-02', '2021-03', '2021-04', '2021-05', '2021-06', '2021-07', '2021-08', '2021-09', '2021-10', '2021-11', '2021-12',
-    '2022-01', '2022-02', '2022-03', '2022-04', '2022-05', '2022-06', '2022-07', '2022-08', '2022-09', '2022-10', '2022-11', '2022-12',
-    '2023-01', '2023-02', '2023-03', '2023-04', '2023-05', '2023-06', '2023-07', '2023-08', '2023-09', '2023-10', '2023-11', '2023-12',
-    '2024-01', '2024-02', '2024-03', '2024-04', '2024-05', #'2024-06', '2024-07', '2024-08', '2024-09', '2024-10', '2024-11', '2024-12',
-]
-dates = pd.DataFrame({'date': [pd.to_datetime(date) for date in dates_raw]})
-
-DEFAULT_ROW = {
-    'size_dc': 0,
-    'battery_storage': 0,
-    'total_cost': 0,
-    'days_to_completion': 0,
-    'adjusted_price': 0,
-    'is_largest_firm': 0,
-    'app_received': 0,
-    'app_complete': 0,
-    'queue': 0
-}
-
-df_ts_copy = df_ts.copy()
-df_ts_copy = df_ts_copy.reset_index()
-cities = df_ts_copy['service_city'].unique()
-
-def get_row(df, city, date, installer):
-    try:
-        row = df.loc[(city, installer, date )]
-        # print(row)
-        # return
-    except KeyError as e:
-        # new_row = pd.DataFrame([DEFAULT_ROW], index=[(city, installer, date)])
-        # df = pd.concat([df, new_row])
-
-        df.loc[(city, installer, date)] = DEFAULT_ROW
-
-        # print(df)
-        row = df.loc[(city, installer, date )]
-    return row
-
-for city in cities:
-    city_df = df_ts_copy[df_ts_copy['service_city'] == city]
-    installers = city_df['installer_name'].unique()
-    last = None
-    print("**************")
-    print("**************")
-    print(city)
-    print("**************")
-    print("**************")
-    for date in dates['date']:
-        # print(date)
-        if not last:
-            # in the first month we leave the queue at 0.
-            last = pd.to_datetime('2021-01')
-
-        for installer in installers:
-            row = get_row(df_ts, city, date, installer)
-            last_row = get_row(df_ts, city, last, installer)
-            # print(row)
-            # print(last_row)
-            # continue
-            df_ts.loc[(city, installer, date), 'queue'] = last_row['queue'] + row['app_received'] - row['app_complete']
-        last = date
-
-print(df_ts)
-
+df_ts.reset_index()
 df_ts.to_csv('./data/aggregate_by_city_installer_ts.csv')
-# temp = df_ts.copy()
 
 count_active = df_ts.groupby(['service_city', 'installer_name'])[['year_month']].aggregate('count')
 
@@ -212,7 +140,7 @@ avg_cost_adjusted = df_ts[df_ts['total_cost']>0].groupby(['year_month', 'service
 # avg_cost_adjusted = avg_cost_adjusted[avg_cost_adjusted['installer_name'] == "tesla energy operations inc"]
 
 
-print(avg_cost_adjusted[avg_cost_adjusted['adjusted_price'] < 0])
-plt.scatter(avg_cost_adjusted['year_month'], avg_cost_adjusted['adjusted_price'])
-plt.suptitle("Average Adjusted Cost by month, city, installer")
-plt.show()
+# print(avg_cost_adjusted[avg_cost_adjusted['adjusted_price'] < 0])
+# plt.scatter(avg_cost_adjusted['year_month'], avg_cost_adjusted['adjusted_price'])
+# plt.suptitle("Average Adjusted Cost by month, city, installer")
+# plt.show()
