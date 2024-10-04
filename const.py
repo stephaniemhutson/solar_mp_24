@@ -22,6 +22,7 @@ TYPE_DICT = {
     'is_NEM2': 'bool',
     'has_battery': 'bool',
     'service_city': 'str',
+    'service_county': 'str',
     'installer_name': 'str',
     'total_cost': 'float64',
     # 'year': 'category'
@@ -40,4 +41,16 @@ TYPE_DICT_AGG = {
     "app_received": 'int64',
     "app_complete": 'int64',
     "queue": 'int64',
+}
+TYPE_DICT_QUEUE = {
+    "service_city": 'str',
+    "installer_name": 'str',
+    "year_month": 'datetime64[ns]',
+    "app_received": 'int64',
+    "app_complete": 'int64',
+    "queue": 'int64',
+    "entered_date": 'datetime64[ns]',
+    "exit_date": 'datetime64[ns]',
+    'active_sales_months': 'int',
+    'count_sales': 'int',
 }
