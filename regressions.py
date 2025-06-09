@@ -12,20 +12,72 @@ import const
 def print_length(df):
     print(len(df))
 
-def check_for_correlations(apps):
-    df_encoded = pd.get_dummies(apps[['total_cost','size_dc', 'electric_vehicle', 'pio_TF', 'output_monitoring', 'mounting_method', 'service_county', 'days_to_completion']], drop_first=True)
-    correlation_matrix = df_encoded.corr()
 
-    threshold = 0.1
-    high_corr_pairs = np.where(np.abs(correlation_matrix) > threshold)
 
-    # Extract the pairs
-    high_corr_indices = [(correlation_matrix.index[x], correlation_matrix.columns[y]) for x, y in zip(*high_corr_pairs) if x != y and x < y]
+table_labels = {
+    'pio_TF' : 'Treatment',
+    'anticipation_period' : 'Anticipation',
+    'log_months_age': 'Log Age',
+    'tc_log': 'Log Installation Price',
+    'pio_TF:log_months_age': 'Treat $\\times$ Age',
+    'anticipation_period:log_months_age': 'Anticipation $\\times$ Age',
+    'months_to_completion': 'Months to Completion',
+    'pio_TF:months_to_completion': 'Treat $\\times$ MTC',
+    'anticipation_period:months_to_completion': 'Anticipation $\\times$ MTC',
+    'log_months_age:months_to_completion': 'Age $\\times$ MTC',
+    'pio_TF:log_months_age:months_to_completion': 'Treat x Age $\\times$ MTC',
+    'anticipation_period:log_months_age:months_to_completion': 'Anticipation $\\times$ Age $\\times$ MTC',
+    'bin_1': 'Age <1 mo.',
+    'bin_3': 'Age 1-3 mo.',
+    'bin_6': 'Age 3-6 mo.',
+    'bin_12': 'Age 6-12 mo.',
+    'bin_24': 'Age 12-24 mo.',
+    'bin_1_age_county': 'Age <1 mo.',
+    'bin_1_age_state': 'Age <1 mo.',
+    'bin_3_age_county': 'Age 1-3 mo.',
+    'bin_3_age_state': 'Age 1-3 mo.',
+    'bin_6_age_county': 'Age 3-6 mo.',
+    'bin_6_age_state': 'Age 3-6 mo.',
+    'bin_12_age_county': 'Age 6-12 mo.',
+    'bin_12_age_state': 'Age 6-12 mo.',
+    'bin_24_age_county': 'Age 12-24 mo.',
+    'bin_24_age_state': 'Age 12-24 mo.',
+    'size_dc': 'Size',
+    'battery_storage': 'Battery Size',
+    'fifo_score_c_backwards': 'FIFO Score',
+    'fifo_score_fc_backwards': 'FIFO Score',
+    'fifo_score_c_backwards:pio_TF': 'FIFO $\\times$ Treatment',
+    'fifo_score_fc_backwards:pio_TF': 'FIFO $\\times$ Treatment',
+    'fifo_score_c_backwards:anticipation_period': 'FIFO $\\times$ Anticipation',
+    'fifo_score_fc_backwards:anticipation_period': 'FIFO $\\times$ Anticipation',
+    'survived_one_year': 'Surivor',
+    'bin_10__nth_complete_county': 'Nth Complete: <=10',
+    'bin_20__nth_complete_county': 'Nth Complete: 11-20',
+    'bin_50__nth_complete_county': 'Nth Complete: 21-50',
+    'bin_100__nth_complete_county': 'Nth Complete: 51-100',
+    'bin_1000__nth_complete_county': 'Nth Complete: 101-1000',
+    'bin_10__nth_complete_state': 'Nth Complete: <=10',
+    'bin_20__nth_complete_state': 'Nth Complete: 11-20',
+    'bin_50__nth_complete_state': 'Nth Complete: 21-50',
+    'bin_100__nth_complete_state': 'Nth Complete: 51-100',
+    'bin_1000__nth_complete_state': 'Nth Complete: 101-1000',
 
-    # Display the results
-    print(f"\nPairs with correlation greater than {threshold}:")
-    for var1, var2 in high_corr_indices:
-        print(f"{var1} and {var2}: {correlation_matrix.loc[var1, var2]}")
+}
+felabels={'county_lic': 'Firm-County', 'service_county': 'County'}
+# def check_for_correlations(apps):
+#     df_encoded = pd.get_dummies(apps[['total_cost','size_dc', 'electric_vehicle', 'pio_TF', 'output_monitoring', 'mounting_method', 'service_county', 'days_to_completion']], drop_first=True)
+#     correlation_matrix = df_encoded.corr()
+
+#     threshold = 0.1
+#     high_corr_pairs = np.where(np.abs(correlation_matrix) > threshold)
+
+#     # Extract the pairs
+#     high_corr_indices = [(correlation_matrix.index[x], correlation_matrix.columns[y]) for x, y in zip(*high_corr_pairs) if x != y and x < y]
+
+#     # Display the results
+#     print(f"\nPairs with correlation greater than {threshold}:")
+#     for var1, var2 in high_corr_indices:
+#         print(f"{var1} and {var2}: {correlation_matrix.loc[var1, var2]}")
 
 def get_data(is_nem2=True, self_install=False):
     if self_install:
@@ -60,7 +112,6 @@ def get_data(is_nem2=True, self_install=False):
     print_length(apps)
 
     apps = apps[apps['is_preceeded'] == False]
-    apps = apps[apps['app_complete'] >= pd.to_datetime('2021-01-01')]
     print("app not preceded, 2021 or later")
     print_length(apps)
     apps['survived_one_year'] = apps['firm_exit_date'] >= '2024-04-14'
@@ -349,10 +400,10 @@ def ms_and_days_to_comp():
 
 def days_to_comp():
     apps = get_data()
-    apps = apps[apps['NEM_tariff'] == '2.0']
-    # apps = apps[apps['pio_TF'] == True]
-    apps = apps[apps['app_received'] >= '2022-01-01']
-    apps = apps[apps['app_received'] <= '2023-4-14']
+    # apps = apps[apps['NEM_tariff'] == '2.0']
+    # # apps = apps[apps['pio_TF'] == True]
+    # apps = apps[apps['app_received'] >= '2022-01-01']
+    # apps = apps[apps['app_received'] <= '2023-4-14']
     model = smf.ols(
         'days_to_completion ~ pio_TF + C(service_county) ',
         data=apps
@@ -563,14 +614,8 @@ def price_time_to_completion():
     print(pf.etable(
         [model1, model2, model3, model4, model5, model6],
         type='tex',
-        felabels={'county_lic': 'Firm-County', 'service_county': 'county'},
-        labels={
-            'months_to_completion': 'Months to Completion',
-            'pio_TF': 'Treatment',
-            'anticipation_period': 'Anticipation',
-            'months_to_completion:pio_TF': 'MTC x Treatment',
-            'months_to_completion:anticipation_period': 'MTC x Anticipation',
-        },
+        felabels=felabels,
+        labels=table_labels,
         signif_code=[0.01, 0.05, 0.1],
     ))
     # # print(model4.summary())
@@ -664,7 +709,7 @@ def fifo_score(fixed_effect):
 
     print("Looking backward")
     model = pf.feols(
-        f'tc_log ~ fifo_score_{fixed_effect}_backwards*pio_TF + anticipation_period*fifo_score_{fixed_effect}_backwards + size_dc + battery_storage + has_battery + output_monitoring | { "county_lic"  if fixed_effect == "fc" else "service_county"}',
+        f'tc_log ~ fifo_score_{fixed_effect}_backwards*pio_TF + anticipation_period*fifo_score_{fixed_effect}_backwards + size_dc + battery_storage + has_battery + output_monitoring | { "firm_identifier"  if fixed_effect == "fc" else "service_county"}',
         data=apps
     )
     print(model.summary())
@@ -757,19 +802,8 @@ def firm_entry():
 
     print(pf.etable(
         [model1, model2, model3, model4],
-        labels={
-            'pio_TF' : 'Treatment',
-            'anticipation_period' : 'Anticipation',
-            'log_months_age': 'Log Age',
-            'pio_TF:log_months_age': 'Treat x Age',
-            'anticipation_period:log_months_age': 'Anticipation x Age',
-            'months_to_completion': 'Months to Completion',
-            'pio_TF:months_to_completion': 'Treat x MTC',
-            'anticipation_period:months_to_completion': 'Anticipation x MTC',
-            'log_months_age:months_to_completion': 'Age x MTC',
-            'pio_TF:log_months_age:months_to_completion': 'Treat x Age x MTC',
-            'anticipation_period:log_months_age:months_to_completion': 'Anticipation x Age x MTC'
-        },
+        labels=table_labels,
+        felabels=felabels,
         type='tex',
         print_tex=True,
         signif_code=[0.01, 0.05, 0.1],
@@ -777,19 +811,8 @@ def firm_entry():
 
     print(pf.etable(
         [model1, model3],
-        labels={
-            'pio_TF' : 'Treatment',
-            'anticipation_period' : 'Anticipation',
-            'log_months_age': 'Log Age',
-            'pio_TF:log_months_age': 'Treat x Age',
-            'anticipation_period:log_months_age': 'Anticipation x Age',
-            'months_to_completion': 'Months to Completion',
-            'pio_TF:months_to_completion': 'Treat x MTC',
-            'anticipation_period:months_to_completion': 'Anticipation x MTC',
-            'log_months_age:months_to_completion': 'Age x MTC',
-            'pio_TF:log_months_age:months_to_completion': 'Treat x Age x MTC',
-            'anticipation_period:log_months_age:months_to_completion': 'Anticipation x Age x MTC'
-        },
+        labels=table_labels,
+        felabels=felabels,
         type='tex',
         print_tex=True,
         signif_code=[0.01, 0.05, 0.1],
@@ -880,34 +903,10 @@ def get_fifo_scores():
     fc_model, obs_fc = fifo_score('fc')
     c_model, obs_c = fifo_score('c')
     print(pf.etable([c_model, fc_model], type='tex',
-        felabels={'county_lic': 'Firm-County', 'service_county': 'County'},
-        labels={
-            'fifo_score_c_backwards': 'FIFO Score',
-            'fifo_score_fc_backwards': 'FIFO Score',
-            'pio_TF': 'Treatment',
-            'anticipation_period': 'Anticipation',
-            'fifo_score_c_backwards:pio_TF': 'FIFO x Treatment',
-            'fifo_score_fc_backwards:pio_TF': 'FIFO x Treatment',
-            'fifo_score_c_backwards:anticipation_period': 'FIFO x Anticipation',
-            'fifo_score_fc_backwards:anticipation_period': 'FIFO x Anticipation',
-        },
+        felabels=felabels,
+        labels=table_labels,
         signif_code=[0.01, 0.05, 0.1]
     ))
-    # model_to_latex(
-    #     [c_model, fc_model],
-    #     {
-    #         'fifo_score_fc_backwards': 'FIFO Score',
-    #         'fifo_score_c_backwards': 'FIFO Score',
-    #         'pio_TF': 'Treatment',
-    #         'anticipation_period': 'Anticipation',
-    #         'fifo_score_c_backwards:pio_TF': 'FIFO x Treatment',
-    #         'fifo_score_fc_backwards:pio_TF': 'FIFO x Treatment',
-    #         'anticipation_period:fifo_score_c_backwards': 'Anticipation x FIFO',
-    #         'anticipation_period:fifo_score_fc_backwards': 'Anticipation x FIFO',
-    #     },
-    #     ['(1)', '(2)'],
-    #     [obs_c, obs_fc]
-    # )
 
 def diffndiff():
     self_install = get_data(self_install=True)
@@ -991,19 +990,8 @@ def firm_entry_bins():
     print(pf.etable(
         [model1, model2, model3, model4],
         # [model1, model3],
-        labels={
-            'pio_TF' : 'Treatment',
-            'anticipation_period' : 'Anticipation',
-            'log_months_age': 'Log Age',
-            'pio_TF:log_months_age': 'Treat x Age',
-            'anticipation_period:log_months_age': 'Anticipation x Age',
-            'months_to_completion': 'Months to Completion',
-            'pio_TF:months_to_completion': 'Treat x MTC',
-            'anticipation_period:months_to_completion': 'Anticipation x MTC',
-            'log_months_age:months_to_completion': 'Age x MTC',
-            'pio_TF:log_months_age:months_to_completion': 'Treat x Age x MTC',
-            'anticipation_period:log_months_age:months_to_completion': 'Anticipation x Age x MTC'
-        },
+        labels=table_labels,
+        felabels=felabels,
         type='tex',
         print_tex=True,
         signif_code=[0.01, 0.05, 0.1],
@@ -1012,19 +1000,8 @@ def firm_entry_bins():
     print(pf.etable(
         # [model1, model2, model3, model4],
         [model1, model3],
-        labels={
-            'pio_TF' : 'Treatment',
-            'anticipation_period' : 'Anticipation',
-            'log_months_age': 'Log Age',
-            'pio_TF:log_months_age': 'Treat x Age',
-            'anticipation_period:log_months_age': 'Anticipation x Age',
-            'months_to_completion': 'Months to Completion',
-            'pio_TF:months_to_completion': 'Treat x MTC',
-            'anticipation_period:months_to_completion': 'Anticipation x MTC',
-            'log_months_age:months_to_completion': 'Age x MTC',
-            'pio_TF:log_months_age:months_to_completion': 'Treat x Age x MTC',
-            'anticipation_period:log_months_age:months_to_completion': 'Anticipation x Age x MTC'
-        },
+        labels=table_labels,
+        felabels=felabels,
         type='tex',
         print_tex=True,
         signif_code=[0.01, 0.05, 0.1],
@@ -1123,19 +1100,8 @@ def firm_entry_bins():
         # [model1, model2, model3, model4],
         [model1, model2],
         # [model1, model2, model3],
-        labels={
-            'pio_TF' : 'Treatment',
-            'anticipation_period' : 'Anticipation',
-            'log_months_age': 'Log Age',
-            'pio_TF:log_months_age': 'Treat x Age',
-            'anticipation_period:log_months_age': 'Anticipation x Age',
-            'months_to_completion': 'Months to Completion',
-            'pio_TF:months_to_completion': 'Treat x MTC',
-            'anticipation_period:months_to_completion': 'Anticipation x MTC',
-            'log_months_age:months_to_completion': 'Age x MTC',
-            'pio_TF:log_months_age:months_to_completion': 'Treat x Age x MTC',
-            'anticipation_period:log_months_age:months_to_completion': 'Anticipation x Age x MTC'
-        },
+        labels=table_labels,
+        felabels=felabels,
         type='tex',
         print_tex=True,
         signif_code=[0.01, 0.05, 0.1],
@@ -1185,6 +1151,7 @@ def firm_entry_dtc_bins():
     #         'pio_TF:log_months_age:months_to_completion': 'Treat x Age x MTC',
     #         'anticipation_period:log_months_age:months_to_completion': 'Anticipation x Age x MTC'
     #     },
+        # felabels=felabels,
     #     type='tex',
     #     print_tex=True,
     #     signif_code=[0.01, 0.05, 0.1],
@@ -1193,19 +1160,8 @@ def firm_entry_dtc_bins():
     print(pf.etable(
         # [model1, model2, model3, model4],
         [model1, model2],
-        labels={
-            'pio_TF' : 'Treatment',
-            'anticipation_period' : 'Anticipation',
-            'log_months_age': 'Log Age',
-            'pio_TF:log_months_age': 'Treat x Age',
-            'anticipation_period:log_months_age': 'Anticipation x Age',
-            'months_to_completion': 'Months to Completion',
-            'pio_TF:months_to_completion': 'Treat x MTC',
-            'anticipation_period:months_to_completion': 'Anticipation x MTC',
-            'log_months_age:months_to_completion': 'Age x MTC',
-            'pio_TF:log_months_age:months_to_completion': 'Treat x Age x MTC',
-            'anticipation_period:log_months_age:months_to_completion': 'Anticipation x Age x MTC'
-        },
+        labels=table_labels,
+        felabels=felabels,
         type='tex',
         print_tex=True,
         signif_code=[0.01, 0.05, 0.1],
@@ -1322,20 +1278,8 @@ def mtc_vs_installs():
     print(pf.etable(
         [model1, model2, model3, model4],
         # [model1, model2],
-        labels={
-            'pio_TF' : 'Treatment',
-            'anticipation_period' : 'Anticipation',
-            'log_months_age': 'Log Age',
-            'pio_TF:log_months_age': 'Treat x Age',
-            'anticipation_period:log_months_age': 'Anticipation x Age',
-            'months_to_completion': 'Months to Completion',
-            'pio_TF:months_to_completion': 'Treat x MTC',
-            'anticipation_period:months_to_completion': 'Anticipation x MTC',
-            'log_months_age:months_to_completion': 'Age x MTC',
-            'pio_TF:log_months_age:months_to_completion': 'Treat x Age x MTC',
-            'anticipation_period:log_months_age:months_to_completion': 'Anticipation x Age x MTC',
-            'survived_one_year': "Survived"
-        },
+        labels=table_labels,
+        felabels=felabels,
         type='tex',
         print_tex=True,
         signif_code=[0.01, 0.05, 0.1],
@@ -1367,20 +1311,8 @@ def mtc_vs_installs():
     print(pf.etable(
         [model1, model2, model3, model4],
         # [model1, model2],
-        labels={
-            'pio_TF' : 'Treatment',
-            'anticipation_period' : 'Anticipation',
-            'log_months_age': 'Log Age',
-            'pio_TF:log_months_age': 'Treat x Age',
-            'anticipation_period:log_months_age': 'Anticipation x Age',
-            'months_to_completion': 'Months to Completion',
-            'pio_TF:months_to_completion': 'Treat x MTC',
-            'anticipation_period:months_to_completion': 'Anticipation x MTC',
-            'log_months_age:months_to_completion': 'Age x MTC',
-            'pio_TF:log_months_age:months_to_completion': 'Treat x Age x MTC',
-            'anticipation_period:log_months_age:months_to_completion': 'Anticipation x Age x MTC',
-            'survived_one_year': "Survived"
-        },
+        labels=table_labels,
+        felabels=felabels,
         type='tex',
         print_tex=True,
         signif_code=[0.01, 0.05, 0.1],
@@ -1399,11 +1331,8 @@ def time_series_prices():
     )
     print(pf.etable(
         model,
-        labels={
-            'pio_TF' : 'Treatment',
-            'anticipation_period' : 'Anticipation',
-            'tc_log': 'Log Installation Price',
-        },
+        labels=table_labels,
+        felabels=felabels,
         type='tex',
         print_tex=True,
         signif_code=[0.01, 0.05, 0.1],
@@ -1441,6 +1370,7 @@ def cum_installs_price():
     apps, bins_str_state = __cumulative_installs(apps, False)
 
 
+    # County Fixed Effects
     model1 = pf.feols(
         f'tc_log ~ pio_TF*({bins_str}) + anticipation_period*({bins_str}) + size_dc + battery_storage + has_battery+ output_monitoring | service_county',
         # f'tc_log ~ C(year_month)*({bins_str}) + size_dc + battery_storage + has_battery+ output_monitoring | service_county',
@@ -1451,6 +1381,8 @@ def cum_installs_price():
         # f'tc_log ~ C(year_month)*(nth_complete__state) + size_dc + battery_storage + has_battery+ output_monitoring | service_county',
         data=apps,
     )
+
+    # Firm-Country Fixed Effects
     model3 = pf.feols(
         f'tc_log ~ pio_TF*({bins_str}) + anticipation_period*({bins_str}) + size_dc + battery_storage + has_battery+ output_monitoring | county_lic',
         # f'tc_log ~ C(year_month)*(nth_complete__county) + size_dc + battery_storage + has_battery+ output_monitoring | county_lic',
@@ -1462,13 +1394,10 @@ def cum_installs_price():
         data=apps,
     )
     print(pf.etable(
-        [model1, model3, model2, model4],
+        [model1, model2, model3, model4],
         # [model1],
-        labels={
-            'pio_TF' : 'Treatment',
-            'anticipation_period' : 'Anticipation',
-            'tc_log': 'Log Installation Price',
-        },
+        labels=table_labels,
+        felabels=felabels,
         type='tex',
         print_tex=True,
         signif_code=[0.01, 0.05, 0.1],
@@ -1481,6 +1410,11 @@ def cum_installs_price():
         data=apps_treatment,
     )
     model2 = pf.feols(
+        f'tc_log ~ ({bins_str_state}) + size_dc + battery_storage + has_battery+ output_monitoring | service_county',
+        # f'tc_log ~ C(year_month)*(nth_complete__state) + size_dc + battery_storage + has_battery+ output_monitoring | service_county',
+        data=apps_treatment,
+    )
+    model3 = pf.feols(
         f'tc_log ~ ({bins_str}) + size_dc + battery_storage + has_battery+ output_monitoring | county_lic',
         # f'tc_log ~ C(year_month)*({bins_str}) + size_dc + battery_storage + has_battery+ output_monitoring | service_county',
         data=apps_treatment,
@@ -1490,20 +1424,11 @@ def cum_installs_price():
         # f'tc_log ~ C(year_month)*(nth_complete__state) + size_dc + battery_storage + has_battery+ output_monitoring | service_county',
         data=apps_treatment,
     )
-    model3 = pf.feols(
-        f'tc_log ~ ({bins_str_state}) + size_dc + battery_storage + has_battery+ output_monitoring | service_county',
-        # f'tc_log ~ C(year_month)*(nth_complete__state) + size_dc + battery_storage + has_battery+ output_monitoring | service_county',
-        data=apps_treatment,
-    )
 
     print(pf.etable(
         [model1, model2, model3, model4],
-        # [model1],
-        labels={
-            'pio_TF' : 'Treatment',
-            'anticipation_period' : 'Anticipation',
-            'tc_log': 'Log Installation Price',
-        },
+        labels=table_labels,
+        felabels=felabels,
         type='tex',
         print_tex=True,
         signif_code=[0.01, 0.05, 0.1],
@@ -1575,11 +1500,8 @@ def completion_rate():
 
     print(pf.etable(
         [model3, model4, model1, model2],
-        labels={
-            'pio_TF' : 'Treatment',
-            'anticipation_period' : 'Anticipation',
-            'tc_log': 'Log Installation Price',
-        },
+        labels=table_labels,
+        felabels=felabels,
         type='tex',
         print_tex=True,
         signif_code=[0.01, 0.05, 0.1],
@@ -1597,14 +1519,8 @@ def completion_rate():
 
     print(pf.etable(
         [model6, model5],
-        labels={
-            'pio_TF' : 'Treatment',
-            'anticipation_period' : 'Anticipation',
-            'tc_log': 'Log Installation Price',
-            'rate_cum_6_months': 'Last 6 mos.',
-            'size_dc': 'Size',
-            'battery_storage': 'Battery Size'
-        },
+        labels=table_labels,
+        felabels=felabels,
         type='tex',
         print_tex=True,
         signif_code=[0.01, 0.05, 0.1],
@@ -1631,12 +1547,12 @@ def completion_rate():
 # firm_entry()
 
 # Main regressions
-# year_month()
-# price_time_to_completion() # *
+year_month()
+price_time_to_completion() # *
 get_fifo_scores() # *
-# firm_entry_bins() # *
-# completion_rate()
-# mtc_vs_installs()
-# cum_installs_price()
+firm_entry_bins() # *
+completion_rate()
+mtc_vs_installs()
+cum_installs_price()
 
 # diffndiff()

@@ -220,9 +220,9 @@ def clean(df):
     df = add_population(df)
     print_length(df)
     print("added population")
-    df = add_ccci(df)
+    df = add_ccci_cpi(df)
     print_length(df)
-    print("added ccci")
+    print("added ccci and cpi")
     # add population
 
     # add FIFO score
@@ -242,26 +242,26 @@ def clean(df):
     # df['tc_log'] = np.log(df['tc_2022'])
 
     # add firm country fixed effects
-    firm_county_fe = df.groupby(['cslb_num', 'service_county'])['tc_log'].mean()
-    firm_county_fe = firm_county_fe.reset_index().rename(columns={'tc_log': 'firm_county_fe'})
-    df = pd.merge(df, firm_county_fe, how='left', on=['cslb_num', 'service_county'])
-    df['tc_log__fc_fe'] = df['tc_log'] - df['firm_county_fe']
-    print_length(df)
-    print("firm county fixed effects")
+    # firm_county_fe = df.groupby(['cslb_num', 'service_county'])['tc_log'].mean()
+    # firm_county_fe = firm_county_fe.reset_index().rename(columns={'tc_log': 'firm_county_fe'})
+    # df = pd.merge(df, firm_county_fe, how='left', on=['cslb_num', 'service_county'])
+    # df['tc_log__fc_fe'] = df['tc_log'] - df['firm_county_fe']
+    # print_length(df)
+    # print("firm county fixed effects")
     # add county fixed effects
-    county_fe = df.groupby(['service_county'])['tc_log'].mean()
-    county_fe = county_fe.reset_index().rename(columns={'tc_log': 'county_fe'})
-    df = pd.merge(df, county_fe, how='left', on=['service_county'])
-    df['tc_log__c_fe'] = df['tc_log'] - df['county_fe']
-    print_length(df)
-    print("county fixed effects")
+    # county_fe = df.groupby(['service_county'])['tc_log'].mean()
+    # county_fe = county_fe.reset_index().rename(columns={'tc_log': 'county_fe'})
+    # df = pd.merge(df, county_fe, how='left', on=['service_county'])
+    # df['tc_log__c_fe'] = df['tc_log'] - df['county_fe']
+    # print_length(df)
+    # print("county fixed effects")
     # add firm fixed effects
-    firm_fe = df.groupby('cslb_num')['tc_log'].mean()
-    firm_fe = firm_fe.reset_index().rename(columns={'tc_log': 'firm_fe'})
-    df = pd.merge(df, firm_fe, how='left', on=['cslb_num'])
-    df['tc_log__f_fe'] = df['tc_log'] - df['firm_fe']
-    print_length(df)
-    print("firm fixed effects")
+    # firm_fe = df.groupby('cslb_num')['tc_log'].mean()
+    # firm_fe = firm_fe.reset_index().rename(columns={'tc_log': 'firm_fe'})
+    # df = pd.merge(df, firm_fe, how='left', on=['cslb_num'])
+    # df['tc_log__f_fe'] = df['tc_log'] - df['firm_fe']
+    # print_length(df)
+    # print("firm fixed effects")
 
     print_length(df)
     df = __firm_entry_data(df)
@@ -271,16 +271,17 @@ def clean(df):
 
     return df
 
-def add_ccci(df):
+def add_ccci_cpi(df):
     ccci = pd.read_csv('./data/CCCI_03_25.csv')
-    cpi = pd.read_csv('./data/BLS_CPIU_04_2025.csv')
-    cpi = pd.read_csv('./data/CPIAUCSL.csv')
+    # cpi = pd.read_csv('./data/BLS_CPIU_04_2025.csv')
+    # cpi = pd.read_csv('./data/CPIAUCSL.csv')
+    cpi = pd.read_csv('./data/CPI_U_W_25.csv')
     cpi = cpi.astype({'observation_date': 'datetime64[ns]'})
     cpi['year'] = cpi['observation_date'].dt.year
 
     cpi['month'] = cpi['observation_date'].dt.month
-    may_2022 = cpi[(cpi['month'] == 5) & (cpi['year'] == 2022)]['CPIAUCSL'].values[0]
-    cpi['CPI_5_22'] = cpi['CPIAUCSL'] / may_2022
+    may_2022 = cpi[(cpi['month'] == 5) & (cpi['year'] == 2022)]['CPI'].values[0]
+    cpi['CPI_5_22'] = cpi['CPI'] / may_2022
 
 
     df = pd.merge(left=df, right=ccci, left_on=['year', 'month'], right_on=['year', 'month'])
@@ -640,15 +641,17 @@ def get_data():
             sce_03 = truncate(chunk)
             sce_03['iou'] = 'sce'
 
-    # joint = pd.concat([pge, sce, sdge])
-    joint = pd.concat([pge, sce, sdge, pge_03, sce_03, sdge_03])
+    joint = pd.concat([pge, sce, sdge])
+    # joint = pd.concat([pge_03, sce_03, sdge_03])
+    # joint = pd.concat([pge, sce, sdge, pge_03, sce_03, sdge_03])
     joint = joint.drop_duplicates(['Application Id'], keep='last')
     print("Concatinating")
     joint.to_csv('./data/truncated_concated_applications.csv')
+    return joint
 
-# get_data()
+apps = get_data()
 
-apps = pd.read_csv('./data/truncated_concated_applications.csv')
+# apps = pd.read_csv('./data/truncated_concated_applications.csv')
 apps = clean(apps)
 
 
